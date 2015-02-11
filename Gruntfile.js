@@ -27,6 +27,25 @@ module.exports = function (grunt) {
         // Project settings
         config: config,
 
+        // Run the express server
+        express: {
+            options: {
+                port: 9000
+            },
+            dev: {
+                options: {
+                    script: 'app.js',
+                    debug: true
+                }
+            }
+        },
+
+        open: {
+            server: {
+                url: 'http://localhost'
+            }
+        },
+
         // Watches files for changes and runs tasks based on the changed files
         watch: {
             bower: {
@@ -55,56 +74,11 @@ module.exports = function (grunt) {
                 files: ['<%= config.app %>/styles/{,*/}*.css'],
                 tasks: ['newer:copy:styles', 'autoprefixer']
             },
-            livereload: {
+            express: {
+                files: ['app.js'],
+                tasks: ['express:dev'],
                 options: {
-                    livereload: '<%= connect.options.livereload %>'
-                },
-                files: [
-                    '<%= config.app %>/{,*/}*.html',
-                    '.tmp/styles/{,*/}*.css',
-                    '<%= config.app %>/images/{,*/}*'
-                ]
-            }
-        },
-
-        // The actual grunt server settings
-        connect: {
-            options: {
-                port: 9000,
-                open: true,
-                livereload: 35729,
-                // Change this to '0.0.0.0' to access the server from outside
-                hostname: '0.0.0.0'
-            },
-            livereload: {
-                options: {
-                    middleware: function(connect) {
-                        return [
-                            connect.static('.tmp'),
-                            connect().use('/bower_components', connect.static('./bower_components')),
-                            connect.static(config.app)
-                        ];
-                    }
-                }
-            },
-            test: {
-                options: {
-                    open: false,
-                    port: 9001,
-                    middleware: function(connect) {
-                        return [
-                            connect.static('.tmp'),
-                            connect.static('test'),
-                            connect().use('/bower_components', connect.static('./bower_components')),
-                            connect.static(config.app)
-                        ];
-                    }
-                }
-            },
-            dist: {
-                options: {
-                    base: '<%= config.dist %>',
-                    livereload: false
+                    spawn: false
                 }
             }
         },
@@ -160,7 +134,7 @@ module.exports = function (grunt) {
                     expand: true,
                     cwd: '<%= config.app %>/styles',
                     src: ['*.scss'],
-                    dest: '.tmp/styles',
+                    dest: '<%= config.app %>/styles',
                     ext: '.css'
                 }]
             },
@@ -169,7 +143,7 @@ module.exports = function (grunt) {
                     expand: true,
                     cwd: '<%= config.app %>/styles',
                     src: ['*.scss'],
-                    dest: '.tmp/styles',
+                    dest: '<%= config.app %>/styles',
                     ext: '.css'
                 }]
             }
@@ -279,32 +253,6 @@ module.exports = function (grunt) {
             }
         },
 
-        // By default, your `index.html`'s <!-- Usemin block --> will take care of
-        // minification. These next options are pre-configured if you do not wish
-        // to use the Usemin blocks.
-        // cssmin: {
-        //     dist: {
-        //         files: {
-        //             '<%= config.dist %>/styles/main.css': [
-        //                 '.tmp/styles/{,*/}*.css',
-        //                 '<%= config.app %>/styles/{,*/}*.css'
-        //             ]
-        //         }
-        //     }
-        // },
-        // uglify: {
-        //     dist: {
-        //         files: {
-        //             '<%= config.dist %>/scripts/scripts.js': [
-        //                 '<%= config.dist %>/scripts/scripts.js'
-        //             ]
-        //         }
-        //     }
-        // },
-        // concat: {
-        //     dist: {}
-        // },
-
         // Copies remaining files to places other tasks can use
         copy: {
             dist: {
@@ -357,15 +305,12 @@ module.exports = function (grunt) {
 
 
     grunt.registerTask('serve', function (target) {
-        if (target === 'dist') {
-            return grunt.task.run(['build', 'connect:dist:keepalive']);
-        }
 
         grunt.task.run([
             'clean:server',
             'concurrent:server',
             'autoprefixer',
-            'connect:livereload',
+            'express:dev',
             'watch'
         ]);
     });
